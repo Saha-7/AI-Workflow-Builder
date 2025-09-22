@@ -29,7 +29,8 @@ export type ComponentType =
   | 'user_query' 
   | 'knowledge_base' 
   | 'llm_engine' 
-  | 'output';
+  | 'output'
+  | 'web_search';
 
 export interface ComponentConfiguration {
   // User Query Component
@@ -110,3 +111,8 @@ export interface ComponentLibraryItem {
   icon: string;
   color: string;
 }
+
+
+
+
+

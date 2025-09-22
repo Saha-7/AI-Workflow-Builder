@@ -14,6 +14,7 @@ const WorkflowBuilder: React.FC = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
   const [executionResult, setExecutionResult] = useState<any>(null);
 
   const selectedNode = useMemo(() => {
@@ -52,10 +53,46 @@ const WorkflowBuilder: React.FC = () => {
     );
   }, [selectedNodeId, setNodes]);
 
-  const handleSaveWorkflow = useCallback(() => {
-    // TODO: Implement save workflow
-    toast.success('Workflow saved successfully!');
-  }, []);
+  const handleSaveWorkflow = useCallback(async () => {
+    try {
+      const workflowDefinition = {
+        nodes: nodes.reduce((acc, node) => {
+          acc[node.id] = {
+            type: node.data.type,
+            data: node.data
+          };
+          return acc;
+        }, {} as any),
+        edges: edges.reduce((acc, edge) => {
+          acc[edge.id] = edge;
+          return acc;
+        }, {} as any)
+      };
+
+      const response = await fetch('http://localhost:8000/api/workflows/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `Workflow ${Date.now()}`,
+          description: 'Generated workflow',
+          definition: workflowDefinition
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentWorkflowId(data.workflow_id);
+        toast.success('Workflow saved successfully!');
+      } else {
+        throw new Error('Failed to save workflow');
+      }
+    } catch (error) {
+      console.error('Error saving workflow:', error);
+      toast.error('Failed to save workflow');
+    }
+  }, [nodes, edges]);
 
   const handleExecuteWorkflow = useCallback(async () => {
     if (nodes.length === 0) {
@@ -76,11 +113,6 @@ const WorkflowBuilder: React.FC = () => {
     }
   }, [nodes]);
 
-  const handleSendMessage = useCallback(async (message: string) => {
-    // TODO: Implement chat with workflow
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-    return { response: `Echo: ${message}` };
-  }, []);
 
   const handleCloseConfig = useCallback(() => {
     setSelectedNodeId(null);
@@ -92,19 +124,22 @@ const WorkflowBuilder: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-900 text-white">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">GenAI Stack</h1>
-            <span className="text-sm text-gray-500">Workflow Builder</span>
+            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">G</span>
+            </div>
+            <h1 className="text-2xl font-bold">GenAI Stack</h1>
+            <span className="text-sm text-gray-400">Chat With AI</span>
           </div>
           
           <div className="flex items-center space-x-2">
             <button
               onClick={handleSaveWorkflow}
-              className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg"
             >
               <Save className="w-4 h-4 mr-2" />
               Save
@@ -113,18 +148,19 @@ const WorkflowBuilder: React.FC = () => {
             <button
               onClick={handleExecuteWorkflow}
               disabled={isExecuting}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
               <Play className="w-4 h-4 mr-2" />
-              {isExecuting ? 'Executing...' : 'Execute'}
+              {isExecuting ? 'Executing...' : 'Build Stack'}
             </button>
             
             <button
               onClick={() => setIsChatOpen(true)}
-              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              disabled={!currentWorkflowId}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <MessageSquare className="w-4 h-4 mr-2" />
-              Chat
+              Chat with Stack
             </button>
           </div>
         </div>
@@ -159,12 +195,12 @@ const WorkflowBuilder: React.FC = () => {
       </div>
 
       {/* Chat Interface */}
-      <ChatInterface
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-        onSendMessage={handleSendMessage}
-        isExecuting={isExecuting}
-      />
+      {isChatOpen && (
+        <ChatInterface
+          workflowId={currentWorkflowId}
+          onClose={() => setIsChatOpen(false)}
+        />
+      )}
 
       {/* Execution Result */}
       {executionResult && (

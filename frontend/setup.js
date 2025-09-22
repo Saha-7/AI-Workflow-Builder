@@ -42,3 +42,9 @@ console.log('\nTo test the frontend:');
 console.log('  Visit http://localhost:3000/test');
 console.log('\nTo build for production:');
 console.log('  npm run build');
+
+
+
+
+
+

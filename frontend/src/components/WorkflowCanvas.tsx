@@ -79,7 +79,7 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   }, [onNodesChange]);
 
   return (
-    <div className="flex-1 relative">
+    <div className="flex-1 relative bg-white">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -92,15 +92,28 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
         onDragLeave={handleDragLeave}
         nodeTypes={nodeTypes}
         fitView
-        className={isDragging ? 'bg-blue-50' : ''}
+        className={isDragging ? 'bg-green-50' : ''}
       >
-        <Controls />
-        <MiniMap />
-        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        <Controls className="bg-white border border-gray-300 rounded-lg shadow-lg" />
+        <MiniMap className="bg-gray-100 border border-gray-300 rounded-lg" />
+        <Background variant={BackgroundVariant.Dots} gap={12} size={1} color="#e5e7eb" />
+        
+        {nodes.length === 0 && !isDragging && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                </svg>
+              </div>
+              <p className="text-gray-500 text-lg font-medium">Drag & drop to get started</p>
+            </div>
+          </div>
+        )}
         
         {isDragging && (
-          <div className="absolute inset-0 bg-blue-50 bg-opacity-50 flex items-center justify-center pointer-events-none">
-            <div className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
+          <div className="absolute inset-0 bg-green-50 bg-opacity-50 flex items-center justify-center pointer-events-none">
+            <div className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
               Drop component here
             </div>
           </div>
